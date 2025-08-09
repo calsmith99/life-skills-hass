@@ -39,27 +39,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
-    # Add the card script with debugging
-    _LOGGER.error("LIFE SKILLS DEBUG: About to register frontend resources")
-    
-    www_path = hass.config.path("custom_components", DOMAIN, "www")
-    _LOGGER.error(f"LIFE SKILLS DEBUG: www_path = {www_path}")
-    
-    # Check if file exists
-    import os
-    js_file = os.path.join(www_path, "life_skills_card.js")
-    _LOGGER.error(f"LIFE SKILLS DEBUG: js_file = {js_file}")
-    _LOGGER.error(f"LIFE SKILLS DEBUG: file exists = {os.path.exists(js_file)}")
-    
-    # Register static path
-    await hass.http.async_register_static_paths([
-        {"path": "/life_skills", "file_path": www_path}
-    ])
-    _LOGGER.error("LIFE SKILLS DEBUG: Static path registered")
-    
     # Add the card script
-    add_extra_js_url(hass, "/life_skills/life_skills_card.js")
-    _LOGGER.error("LIFE SKILLS DEBUG: JS URL added")
+    js_url = f"/{DOMAIN}/life_skills_card.js"
+    
+    # Register the www directory to serve static files
+    import os
+    www_path = os.path.join(os.path.dirname(__file__), "www")
+    
+    # Register static files using the aiohttp router directly
+    try:
+        from homeassistant.components.http.static import CachingStaticResource
+        hass.http.app.router.add_static(f"/{DOMAIN}", www_path)
+    except Exception:
+        # If static registration fails, the card can still be accessed via manual setup
+        pass
+    
+    # Add the card script to frontend
+    add_extra_js_url(hass, js_url)
 
     # Set up services
     await async_setup_services(hass)
