@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Life Skills Setup",
+        "description": "Set up your Life Skills tracking system. You'll be able to add multiple skills to track.",
+        "data": {}
+      },
+      "skill": {
+        "title": "Add a Skill",
+        "description": "Configure a new skill to track. You can customize the name, icon, and starting XP.",
+        "data": {
+          "name": "Skill Name",
+          "icon": "Icon",
+          "xp": "Starting XP"
+        }
+      },
+      "add_another": {
+        "title": "Add Another Skill?",
+        "description": "You have added {skills_count} skill(s). Would you like to add another?",
+        "data": {
+          "add_another": "Add another skill"
+        }
+      }
+    },
+    "error": {
+      "skill_exists": "A skill with this name already exists."
+    },
+    "abort": {
+      "already_configured": "Life Skills is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Life Skills Options",
+        "description": "You currently have {skills_count} skill(s) configured. Use the integration settings to modify skills.",
+        "data": {}
+      }
+    }
+  }
+}

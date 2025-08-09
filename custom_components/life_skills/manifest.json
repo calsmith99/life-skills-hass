@@ -1,0 +1,9 @@
+{
+  "domain": "life_skills",
+  "name": "Life Skills",
+  "config_flow": true,
+  "dependencies": [],
+  "iot_class": "calculated",
+  "requirements": [],
+  "version": "1.0.0"
+}

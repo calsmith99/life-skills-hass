@@ -1,0 +1,39 @@
+add_xp:
+  name: Add XP
+  description: Add experience points to a skill
+  fields:
+    name:
+      name: Skill Name
+      description: The name of the skill to add XP to
+      required: true
+      selector:
+        text:
+    amount:
+      name: Amount
+      description: Amount of XP to add
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 10000
+          step: 1
+
+set_level:
+  name: Set Level
+  description: Set a skill to a specific level
+  fields:
+    name:
+      name: Skill Name
+      description: The name of the skill to set level for
+      required: true
+      selector:
+        text:
+    level:
+      name: Level
+      description: Target level (XP will be calculated automatically)
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
