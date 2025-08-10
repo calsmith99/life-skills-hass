@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from homeassistant.components.frontend import add_extra_js_url
+
 from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +38,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Life Skills from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
+
+    # Add the card script
+    js_url = f"/{DOMAIN}/life_skills_card.js"
+    
+    # Register the www directory to serve static files
+    import os
+    www_path = os.path.join(os.path.dirname(__file__), "www")
+    
+    # Register static files using the aiohttp router directly
+    try:
+        from homeassistant.components.http.static import CachingStaticResource
+        hass.http.app.router.add_static(f"/{DOMAIN}", www_path)
+    except Exception:
+        # If static registration fails, the card can still be accessed via manual setup
+        pass
+    
+    # Add the card script to frontend
+    add_extra_js_url(hass, js_url)
 
     # Set up services
     await async_setup_services(hass)

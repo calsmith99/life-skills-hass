@@ -256,32 +256,20 @@ class LifeSkillsTotalLevelSensor(SensorEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         
-        # Listen for all state changes to detect life skill level changes
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass,
-                None,  # Listen to all entities
-                self._handle_state_change,
-            )
-        )
-        
         # Calculate initial total
         self._calculate_total()
-
-    @callback
-    def _handle_state_change(self, event) -> None:
-        """Handle state changes for life skill entities."""
-        entity_id = event.data.get("entity_id", "")
         
-        # Only process life skill level sensors
-        if (entity_id.startswith("sensor.") and 
-            entity_id.endswith("_level") and 
-            not entity_id.endswith("total_level")):
-            
-            # Check if this is a life skill by looking for corresponding XP entity
-            xp_entity = entity_id.replace("_level", "_xp").replace("sensor.", "number.")
-            if self.hass.states.get(xp_entity):
-                self._calculate_total()
+        # Set up a periodic update to check for changes
+        # This is simpler than trying to listen to all state changes
+        import asyncio
+        async def periodic_update():
+            while True:
+                await asyncio.sleep(10)  # Update every 10 seconds
+                if self.hass is not None:
+                    self._calculate_total()
+        
+        # Start the periodic update task
+        self.hass.async_create_task(periodic_update())
 
     def _calculate_total(self) -> None:
         """Calculate total level from all life skills."""
