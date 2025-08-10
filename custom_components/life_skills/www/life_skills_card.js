@@ -23,8 +23,7 @@ class LifeSkillsCard extends HTMLElement {
     }
 
     const selectedSkill = this.config.skill;
-    let cardTitle = 'Life Skills';
-    let skillContent = '<p>No skill selected. Use the visual editor to choose a skill.</p>';
+    let skillContent = '<div style="padding: 16px; text-align: center; color: var(--secondary-text-color);">No skill selected. Use the visual editor to choose a skill.</div>';
     
     if (selectedSkill && this._hass.states[selectedSkill]) {
       const xpEntity = this._hass.states[selectedSkill];
@@ -47,58 +46,149 @@ class LifeSkillsCard extends HTMLElement {
         skillName = skillName.slice(0, -3);
       }
       
-      cardTitle = skillName;
+      // Calculate progress percentage to next level
+      const currentLevelXp = this._calculateXpForLevel(level);
+      const nextLevelXp = this._calculateXpForLevel(level + 1);
+      const xpInCurrentLevel = xp - currentLevelXp;
+      const xpNeededForLevel = nextLevelXp - currentLevelXp;
+      const progressPercent = xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 100;
+      
+      // Get skill icon from the XP entity
+      const skillIcon = xpEntity.attributes.icon || 'mdi:star';
       
       skillContent = `
-        <div class="skill-info">
-          <div class="stats">
-            <div class="stat">
-              <span class="label">Level:</span>
-              <span class="value">${level}</span>
+        <div class="skill-card-container">
+          <div class="top-row">
+            <div class="icon-section">
+              <ha-icon icon="${skillIcon}"></ha-icon>
             </div>
-            <div class="stat">
-              <span class="label">XP:</span>
-              <span class="value">${xp.toLocaleString()}</span>
-            </div>
-            <div class="stat">
-              <span class="label">XP to Next:</span>
-              <span class="value">${xpToNext.toLocaleString()}</span>
+            <div class="level-info">
+              <div class="current-level">${level}</div>
+              <div class="max-level">99</div>
             </div>
           </div>
+          <div class="name-section">
+            <span class="skill-name">${skillName}</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${progressPercent}%"></div>
+          <div class="progress-empty" style="width: ${100 - progressPercent}%"></div>
         </div>
       `;
     }
     
     this.innerHTML = `
       <ha-card>
-        <div class="card-header">
-          <div class="name">${cardTitle}</div>
-        </div>
-        <div class="card-content">
-          ${skillContent}
-        </div>
+        ${skillContent}
       </ha-card>
       <style>
-        .skill-info .stats {
+        ha-card {
+          padding: 0;
+          overflow: hidden;
+        }
+        
+        .skill-card-container {
+          margin: 4px 12px;
           display: flex;
           flex-direction: column;
-          gap: 8px;
         }
-        .stat {
+        
+        .top-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          gap: 16px;
+          padding-bottom: 4px;
         }
-        .stat .label {
+        
+        .icon-section {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-width: 60px;
+          height: 60px;
+        }
+        
+        .icon-section ha-icon {
+          --mdc-icon-size: 50px;
+          color: var(--primary-color);
+        }
+        
+        .level-info {
+          max-width: 50px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          flex: 1;
+        }
+        
+        .current-level {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--primary-text-color);
+          border-bottom: 2px solid hsla(49, 100%, 81%);
+          text-align: start;
+          vertical-align: baseline;
+        }
+        
+        .max-level {
+          font-size: 18px;
           font-weight: 500;
           color: var(--secondary-text-color);
+          text-align: end;
+          opacity: 0.8;
         }
-        .stat .value {
-          font-weight: bold;
+        
+        .name-section {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-top: -4px;
+        }
+        
+        .skill-name {
+          font-size: 16px;
+          font-weight: 500;
           color: var(--primary-text-color);
+          opacity: 0.8;
+        }
+        
+        .progress-bar {
+          display: flex;
+          height: 8px;
+          width: 100%;
+          border-radius: 4px;
+          overflow: hidden;
+          background: var(--divider-color);
+          margin-top: 4px;
+        }
+        
+        .progress-fill {
+          background: linear-gradient(90deg, hsla(16, 100%, 76%, 1) 0%, hsla(49, 100%, 81%, 1) 100%);
+          transition: width 0.3s ease;
+        }
+        
+        .progress-empty {
+          background: linear-gradient(135deg, #a844a188 0%, #8436ab00 10%);
         }
       </style>
     `;
+  }
+
+  // Helper method to calculate XP for a given level (reusing the logic from sensor.py)
+  _calculateXpForLevel(level) {
+    if (level <= 1) {
+      return 0;
+    }
+    
+    let totalSum = 0;
+    for (let n = 1; n < level; n++) {
+      const term = n + 300 * Math.pow(2, n / 7);
+      totalSum += term;
+    }
+    
+    return Math.floor(totalSum / 4);
   }
 
   // This method is required for the visual editor to work
