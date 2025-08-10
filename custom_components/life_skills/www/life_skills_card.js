@@ -222,164 +222,38 @@ class LifeSkillsCardEditor extends HTMLElement {
       this.attachShadow({ mode: 'open' });
     }
 
-    // Get available skills from Home Assistant entities
-    const skills = this._getAvailableSkills();
-    const currentSkill = this.config.skill;
-    const currentSkillName = currentSkill ? 
-      (skills.find(s => s.entity_id === currentSkill)?.name || '') : '';
-
     this.shadowRoot.innerHTML = `
-      <style>
-        .form-group {
-          margin-bottom: 16px;
-          position: relative;
-        }
-        label {
-          display: block;
-          margin-bottom: 4px;
-          font-weight: 500;
-        }
-        input {
-          width: 100%;
-          padding: 8px;
-          border: 1px solid var(--divider-color);
-          border-radius: 4px;
-          font-size: 14px;
-          background: var(--card-background-color);
-          color: var(--primary-text-color);
-          box-sizing: border-box;
-        }
-        input:focus {
-          outline: none;
-          border-color: var(--primary-color);
-        }
-        .suggestions {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          background: var(--card-background-color);
-          border: 1px solid var(--divider-color);
-          border-top: none;
-          border-radius: 0 0 4px 4px;
-          max-height: 200px;
-          overflow-y: auto;
-          z-index: 1000;
-          display: none;
-        }
-        .suggestion {
-          padding: 8px;
-          cursor: pointer;
-          border-bottom: 1px solid var(--divider-color);
-        }
-        .suggestion:hover {
-          background: var(--secondary-background-color);
-        }
-        .suggestion:last-child {
-          border-bottom: none;
-        }
-        .suggestions.show {
-          display: block;
-        }
-      </style>
       <div class="form-group">
-        <label for="skill-input">Skill to Display:</label>
-        <input 
-          type="text" 
-          id="skill-input"
-          value="${currentSkillName}"
-          placeholder="Start typing to search skills..."
-          autocomplete="off"
-        />
-        <div class="suggestions" id="suggestions">
-          ${skills.map(skill => `
-            <div class="suggestion" data-entity-id="${skill.entity_id}">
-              ${skill.name}
-            </div>
-          `).join('')}
-        </div>
+        <label>Skill to Display</label>
+        <ha-entity-picker
+          .hass="${this._hass}"
+          .value="${this.config.skill || ''}"
+          .includeDomains="${['number']}"
+          .entityFilter="${this._entityFilter.bind(this)}"
+          @value-changed="${this._skillChanged.bind(this)}"
+          allow-custom-entity
+        ></ha-entity-picker>
       </div>
     `;
 
-    // Add event listeners
-    const skillInput = this.shadowRoot.querySelector('#skill-input');
-    const suggestions = this.shadowRoot.querySelector('#suggestions');
-    
-    if (skillInput && suggestions) {
-      // Show suggestions when input is focused
-      skillInput.addEventListener('focus', () => {
-        this._filterSuggestions('');
-        suggestions.classList.add('show');
-      });
-
-      // Hide suggestions when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!this.shadowRoot.contains(e.target)) {
-          suggestions.classList.remove('show');
-        }
-      });
-
-      // Filter suggestions as user types
-      skillInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        this._filterSuggestions(query);
-        suggestions.classList.add('show');
-      });
-
-      // Handle suggestion clicks
-      suggestions.addEventListener('click', (e) => {
-        if (e.target.classList.contains('suggestion')) {
-          const entityId = e.target.getAttribute('data-entity-id');
-          const skillName = e.target.textContent;
-          
-          skillInput.value = skillName;
-          suggestions.classList.remove('show');
-          
-          this._valueChanged('skill', entityId);
-        }
-      });
+    // Set properties after element is created
+    const entityPicker = this.shadowRoot.querySelector('ha-entity-picker');
+    if (entityPicker && this._hass) {
+      entityPicker.hass = this._hass;
+      entityPicker.value = this.config.skill || '';
+      entityPicker.includeDomains = ['number'];
+      entityPicker.entityFilter = this._entityFilter.bind(this);
+      entityPicker.addEventListener('value-changed', this._skillChanged.bind(this));
     }
   }
 
-  _filterSuggestions(query) {
-    const suggestions = this.shadowRoot.querySelectorAll('.suggestion');
-    
-    suggestions.forEach(suggestion => {
-      const skillName = suggestion.textContent.toLowerCase();
-      if (skillName.includes(query)) {
-        suggestion.style.display = 'block';
-      } else {
-        suggestion.style.display = 'none';
-      }
-    });
+  _entityFilter(entity) {
+    return entity.entity_id.endsWith('_xp');
   }
 
-  _getAvailableSkills() {
-    if (!this._hass) {
-      return [];
-    }
-
-    const skills = [];
-    
-    // Find all life skill XP entities
-    Object.keys(this._hass.states).forEach(entity_id => {
-      if (entity_id.startsWith('number.') && entity_id.endsWith('_xp')) {
-        const state = this._hass.states[entity_id];
-        let skillName = state.attributes.friendly_name || entity_id.replace('number.', '').replace('_xp', '').replace(/_/g, ' ');
-        
-        // Remove " XP" suffix if it exists
-        if (skillName.endsWith(' XP')) {
-          skillName = skillName.slice(0, -3);
-        }
-        
-        skills.push({
-          entity_id: entity_id,
-          name: skillName
-        });
-      }
-    });
-
-    return skills.sort((a, b) => a.name.localeCompare(b.name));
+  _skillChanged(ev) {
+    const value = ev.detail.value;
+    this._valueChanged('skill', value);
   }
 
   _valueChanged(key, value) {
@@ -397,7 +271,7 @@ class LifeSkillsCardEditor extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-    // Re-render when hass is set to populate skills
+    // Re-render when hass is set and update entity picker
     if (this.shadowRoot) {
       this.render();
     }
