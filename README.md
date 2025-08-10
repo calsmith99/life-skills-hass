@@ -6,7 +6,7 @@ A Home Assistant integration to track and manage life skills with XP and levelin
 
 - Multiple configurable skills with custom names and icons
 - XP tracking with number entities
-- Automatic level calculation based on XP progression formula
+- Automatic level calculation based on XP progression formula (Stolen formula from RuneScape)
 - XP to next level sensors
 - Total level sensor across all skills
 - Services for adding XP, setting levels, and resetting skills
@@ -40,8 +40,6 @@ Each skill provides:
 - `sensor.{skill_name}_level` - Current level (calculated using custom XP formula)
 - `sensor.{skill_name}_xp_to_next` - XP needed for next level
 - `input_number.{skill_name}_xp` - Current XP (adjustable)
-
-Total level sensor: `sensor.life_skills_total_level`
 
 ### XP Formula
 
