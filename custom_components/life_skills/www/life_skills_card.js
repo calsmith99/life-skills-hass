@@ -2,12 +2,23 @@ class LifeSkillsCard extends HTMLElement {
   constructor() {
     super();
     this.config = {};
+    this.attachShadow({ mode: 'open' });
   }
 
   setConfig(config) {
     if (!config) {
       throw new Error('Invalid configuration');
     }
+    
+    if (typeof config !== 'object') {
+      throw new Error('Invalid configuration: expected an object');
+    }
+    
+    // Handle potential missing skill property gracefully
+    if (!('skill' in config)) {
+      config.skill = '';
+    }
+    
     this.config = config;
     this.render();
   }
@@ -22,10 +33,10 @@ class LifeSkillsCard extends HTMLElement {
       return;
     }
 
-    const selectedSkill = this.config.skill;
+    const selectedSkill = this.config.skill || '';
     let skillContent = '<div style="padding: 16px; text-align: center; color: var(--secondary-text-color);">No skill selected. Use the visual editor to choose a skill.</div>';
     
-    if (selectedSkill && this._hass.states[selectedSkill]) {
+    if (selectedSkill && this._hass.states && this._hass.states[selectedSkill]) {
       const xpEntity = this._hass.states[selectedSkill];
       const xp = parseInt(xpEntity.state) || 0;
       
@@ -39,7 +50,7 @@ class LifeSkillsCard extends HTMLElement {
       const xpToNextEntity = this._hass.states[xpToNextEntityId];
       const xpToNext = xpToNextEntity ? parseInt(xpToNextEntity.state) || 0 : 0;
       
-      let skillName = xpEntity.attributes.friendly_name || 'Unknown Skill';
+      let skillName = xpEntity.attributes && xpEntity.attributes.friendly_name ? xpEntity.attributes.friendly_name : 'Unknown Skill';
       
       // Remove " XP" suffix if it exists for the display name
       if (skillName.endsWith(' XP')) {
@@ -54,7 +65,7 @@ class LifeSkillsCard extends HTMLElement {
       const progressPercent = xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 100;
       
       // Get skill icon from the XP entity
-      const skillIcon = xpEntity.attributes.icon || 'mdi:star';
+      const skillIcon = xpEntity.attributes && xpEntity.attributes.icon ? xpEntity.attributes.icon : 'mdi:star';
       
       skillContent = `
         <div class="skill-card-container">
@@ -78,11 +89,13 @@ class LifeSkillsCard extends HTMLElement {
       `;
     }
     
-    this.innerHTML = `
-      <ha-card>
-        ${skillContent}
-      </ha-card>
+    // Use shadowRoot for proper encapsulation, important for mobile
+    this.shadowRoot.innerHTML = `
       <style>
+        :host {
+          display: block;
+        }
+        
         ha-card {
           padding: 0;
           overflow: hidden;
@@ -173,6 +186,9 @@ class LifeSkillsCard extends HTMLElement {
           background: linear-gradient(135deg, #a844a188 0%, #8436ab00 10%);
         }
       </style>
+      <ha-card>
+        ${skillContent}
+      </ha-card>
     `;
   }
 
@@ -201,6 +217,11 @@ class LifeSkillsCard extends HTMLElement {
     return {
       skill: ''
     };
+  }
+  
+  // This helps mobile layouts properly size the card
+  getCardSize() {
+    return 2;
   }
 }
 

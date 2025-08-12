@@ -49,8 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register static files using the aiohttp router directly
     try:
         from homeassistant.components.http.static import CachingStaticResource
-        hass.http.app.router.add_static(f"/{DOMAIN}", www_path)
-    except Exception:
+        hass.http.app.router.add_static(f"/{DOMAIN}", www_path, follow_symlinks=True)
+        _LOGGER.debug(f"Life Skills: Successfully registered static directory at /{DOMAIN}")
+    except Exception as e:
+        _LOGGER.error(f"Life Skills: Failed to register static directory: {str(e)}")
         # If static registration fails, the card can still be accessed via manual setup
         pass
     
