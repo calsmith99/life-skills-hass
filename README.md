@@ -12,7 +12,14 @@ A Home Assistant integration to track and manage life skills with XP and levelin
 - Services for adding XP, setting levels, and resetting skills
 
 ## Installation
+HACS Custom Repo (recommended):
+1. In HomeAssistant, Navigate to HACS
+2. Click the 3 dots in the top right, and choose 'custom repositories'
+3. Paste the url 'https://github.com/calsmith99/life-skills-hass'
+4. Restart Home Assistant
+5. Add the integration through Configuration → Integrations → Add Integration → Life Skills
 
+Manual:
 1. Copy the `custom_components/life_skills` folder to your Home Assistant `custom_components` directory
 2. Restart Home Assistant
 3. Add the integration through Configuration → Integrations → Add Integration → Life Skills
