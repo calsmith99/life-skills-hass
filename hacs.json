@@ -1,0 +1,10 @@
+{
+  "name": "Life Skills",
+  "content_in_root": false,
+  "filename": "custom_components/life_skills/__init__.py",
+  "render_readme": true,
+  "hacs": "1.6.0",
+  "domains": ["sensor", "number"],
+  "iot_class": "calculated",
+  "homeassistant": "2023.8.0"
+}
