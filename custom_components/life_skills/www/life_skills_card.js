@@ -97,6 +97,7 @@ class LifeSkillsCard extends LitElement {
   }
 
   render() {
+    console.log('[LifeSkillsCard] render called');
     if (!this.hass || !this.config) return html``;
     const selectedSkill = this.config.skill || '';
     if (!selectedSkill || !this.hass.states[selectedSkill]) {
@@ -166,20 +167,30 @@ class LifeSkillsCard extends LitElement {
 
   shouldUpdate(changedProps) {
     if (!this.hass || !this.config || !this.config.skill) return false;
-    if (changedProps.has('config')) return true;
+    if (changedProps.has('config')) {
+      console.log('[LifeSkillsCard] shouldUpdate: config changed');
+      return true;
+    }
     if (!changedProps.has('hass')) return false;
     const prevHass = changedProps.get('hass');
-    if (!prevHass) return true;
+    if (!prevHass) {
+      console.log('[LifeSkillsCard] shouldUpdate: no previous hass');
+      return true;
+    }
     const skill = this.config.skill;
-    // Check if the relevant entities have changed
     const relevantEntities = [
       skill,
       skill.replace('number.', 'sensor.').replace('_xp', '_level'),
       skill.replace('number.', 'sensor.').replace('_xp', '_xp_to_next'),
     ];
-    return relevantEntities.some(
+    const changed = relevantEntities.filter(
       eid => (this.hass.states[eid]?.state !== prevHass.states[eid]?.state)
     );
+    if (changed.length > 0) {
+      console.log('[LifeSkillsCard] shouldUpdate: entity state(s) changed', changed);
+      return true;
+    }
+    return false;
   }
 }
 
