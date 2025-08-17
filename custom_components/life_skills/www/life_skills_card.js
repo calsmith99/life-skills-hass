@@ -163,6 +163,24 @@ class LifeSkillsCard extends LitElement {
   getCardSize() {
     return 2;
   }
+
+  shouldUpdate(changedProps) {
+    if (!this.hass || !this.config || !this.config.skill) return false;
+    if (changedProps.has('config')) return true;
+    if (!changedProps.has('hass')) return false;
+    const prevHass = changedProps.get('hass');
+    if (!prevHass) return true;
+    const skill = this.config.skill;
+    // Check if the relevant entities have changed
+    const relevantEntities = [
+      skill,
+      skill.replace('number.', 'sensor.').replace('_xp', '_level'),
+      skill.replace('number.', 'sensor.').replace('_xp', '_xp_to_next'),
+    ];
+    return relevantEntities.some(
+      eid => (this.hass.states[eid]?.state !== prevHass.states[eid]?.state)
+    );
+  }
 }
 
 customElements.define('life-skills-card', LifeSkillsCard);
