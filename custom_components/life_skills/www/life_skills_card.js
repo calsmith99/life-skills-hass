@@ -103,12 +103,13 @@ class LifeSkillsCard extends HTMLElement {
         ha-card {
           padding: 0;
           overflow: hidden;
-          cursor: pointer;
+          cursor: pointer !important;
           transition: box-shadow 0.3s ease;
         }
         
         ha-card:hover {
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          transform: translateY(-1px);
         }
         
         .skill-card-container {
@@ -201,11 +202,22 @@ class LifeSkillsCard extends HTMLElement {
       </ha-card>
     `;
 
-    // Add click event listener to the card
-    const card = this.shadowRoot.querySelector('ha-card');
-    if (card) {
-      card.addEventListener('click', () => this._showUnlocksPopup());
-    }
+    // Add click event listener to the card after a micro task to ensure DOM is ready
+    requestAnimationFrame(() => {
+      const card = this.shadowRoot.querySelector('ha-card');
+      console.log('Setting up click handler, card found:', !!card); // Debug log
+      if (card) {
+        // Remove any existing listeners first
+        card.removeEventListener('click', this._cardClickHandler);
+        // Add the new listener
+        this._cardClickHandler = () => {
+          console.log('Card clicked!'); // Debug log
+          this._showUnlocksPopup();
+        };
+        card.addEventListener('click', this._cardClickHandler);
+        console.log('Click handler added'); // Debug log
+      }
+    });
   }
 
   // Helper method to calculate XP for a given level (reusing the logic from sensor.py)
@@ -224,9 +236,14 @@ class LifeSkillsCard extends HTMLElement {
   }
 
   _showUnlocksPopup() {
+    console.log('_showUnlocksPopup called'); // Debug log
+    
     if (!this.config.skill || !this._hass.states[this.config.skill]) {
+      console.log('No skill config or entity found:', this.config.skill); // Debug log
       return;
     }
+
+    console.log('Opening popup for skill:', this.config.skill); // Debug log
 
     const selectedSkill = this.config.skill;
     const xpEntity = this._hass.states[selectedSkill];
