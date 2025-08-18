@@ -11,11 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-# Prefer loading the card as an ES module; fall back to legacy JS include if needed
-try:  # Home Assistant 0.107+
-    from homeassistant.components.frontend import add_extra_module_url as _add_frontend_resource
-except Exception:  # Fallback for older versions
-    from homeassistant.components.frontend import add_extra_js_url as _add_frontend_resource
+# Load the card as a regular JavaScript file 
+from homeassistant.components.frontend import add_extra_js_url
 
 from .services import async_setup_services, async_unload_services
 
@@ -60,9 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # If static registration fails, the card can still be accessed via manual setup
         pass
     
-    # Add the card script to frontend (as module when supported)
+    # Add the card script to frontend
     try:
-        _add_frontend_resource(hass, js_url)
+        add_extra_js_url(hass, js_url)
         _LOGGER.debug("Life Skills: Registered frontend resource %s", js_url)
     except Exception as e:
         _LOGGER.warning("Life Skills: Could not register frontend resource %s: %s", js_url, e)

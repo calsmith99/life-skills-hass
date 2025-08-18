@@ -1,4 +1,11 @@
-import { LitElement, html, css } from 'lit';
+console.log('Life Skills Card: Loading...');
+
+// Get LitElement from the global window object
+const { LitElement, html, css } = window.lit || {};
+
+if (!LitElement) {
+  console.error('Life Skills Card: LitElement not found. Make sure Home Assistant frontend is loaded.');
+}
 
 class LifeSkillsCard extends LitElement {
   static properties = {
@@ -193,9 +200,70 @@ class LifeSkillsCard extends LitElement {
     return false;
   }
 }
+
+// Card editor for the visual editor
+class LifeSkillsCardEditor extends LitElement {
+  static properties = {
+    hass: {},
+    config: {},
+  };
+
+  setConfig(config) {
+    this.config = config || {};
+  }
+
+  render() {
+    return html`
+      <div class="form-group">
+        <label>Skill to Display</label>
+        <ha-entity-picker
+          .hass="${this.hass}"
+          .value="${this.config.skill || ''}"
+          .includeDomains="${['number']}"
+          .entityFilter="${this._entityFilter}"
+          @value-changed="${this._skillChanged}"
+          allow-custom-entity
+        ></ha-entity-picker>
+      </div>
+    `;
+  }
+
+  _entityFilter(entity) {
+    return entity.entity_id.endsWith('_xp');
+  }
+
+  _skillChanged(ev) {
+    const value = ev.detail.value;
+    this._valueChanged('skill', value);
+  }
+
+  _valueChanged(key, value) {
+    const newConfig = { ...this.config };
+    newConfig[key] = value;
+    
+    // Fire event to update config
+    const event = new CustomEvent('config-changed', {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true
+    });
+    this.dispatchEvent(event);
+  }
+}
+
 // Guard against double registration in dev/hot-reload environments
 if (!customElements.get('life-skills-card')) {
   customElements.define('life-skills-card', LifeSkillsCard);
+  console.log('Life Skills Card: Registered life-skills-card element');
+} else {
+  console.log('Life Skills Card: life-skills-card already registered');
+}
+
+if (!customElements.get('life-skills-card-editor')) {
+  customElements.define('life-skills-card-editor', LifeSkillsCardEditor);
+  console.log('Life Skills Card: Registered life-skills-card-editor element');
+} else {
+  console.log('Life Skills Card: life-skills-card-editor already registered');
 }
 
 // Optional: Register with Lovelace card picker
@@ -208,3 +276,5 @@ if (!window.customCards.find((c) => c.type === 'life-skills-card')) {
     preview: false,
   });
 }
+
+console.log('Life Skills Card: Script loaded successfully');
