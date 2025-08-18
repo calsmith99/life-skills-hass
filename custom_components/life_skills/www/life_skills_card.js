@@ -50,6 +50,10 @@ class LifeSkillsCard extends HTMLElement {
       const xpToNextEntity = this._hass.states[xpToNextEntityId];
       const xpToNext = xpToNextEntity ? parseInt(xpToNextEntity.state) || 0 : 0;
       
+      // Get unlocks entity
+      const unlocksEntityId = selectedSkill.replace('number.', 'sensor.').replace('_xp', '_unlocks');
+      const unlocksEntity = this._hass.states[unlocksEntityId];
+      
       let skillName = xpEntity.attributes && xpEntity.attributes.friendly_name ? xpEntity.attributes.friendly_name : 'Unknown Skill';
       
       // Remove " XP" suffix if it exists for the display name
@@ -68,7 +72,7 @@ class LifeSkillsCard extends HTMLElement {
       const skillIcon = xpEntity.attributes && xpEntity.attributes.icon ? xpEntity.attributes.icon : 'mdi:star';
       
       skillContent = `
-        <div class="skill-card-container">
+        <div class="skill-card-container" @click="${this._showUnlocksPopup.bind(this)}">
           <div class="top-row">
             <div class="icon-section">
               <ha-icon icon="${skillIcon}"></ha-icon>
@@ -99,6 +103,13 @@ class LifeSkillsCard extends HTMLElement {
         ha-card {
           padding: 0;
           overflow: hidden;
+          cursor: pointer !important;
+          transition: box-shadow 0.3s ease;
+        }
+        
+        ha-card:hover {
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          transform: translateY(-1px);
         }
         
         .skill-card-container {
@@ -190,6 +201,18 @@ class LifeSkillsCard extends HTMLElement {
         ${skillContent}
       </ha-card>
     `;
+
+    // Add click event listener to the card after a micro task to ensure DOM is ready
+    requestAnimationFrame(() => {
+      const card = this.shadowRoot.querySelector('ha-card');
+      if (card) {
+        // Remove any existing listeners first
+        card.removeEventListener('click', this._cardClickHandler);
+        // Add the new listener
+        this._cardClickHandler = () => this._showUnlocksPopup();
+        card.addEventListener('click', this._cardClickHandler);
+      }
+    });
   }
 
   // Helper method to calculate XP for a given level (reusing the logic from sensor.py)
@@ -205,6 +228,460 @@ class LifeSkillsCard extends HTMLElement {
     }
     
     return Math.floor(totalSum / 4);
+  }
+
+  _showUnlocksPopup() {
+    if (!this.config.skill || !this._hass.states[this.config.skill]) {
+      return;
+    }
+
+    const selectedSkill = this.config.skill;
+    const xpEntity = this._hass.states[selectedSkill];
+    
+    // Get corresponding entities
+    const levelEntityId = selectedSkill.replace('number.', 'sensor.').replace('_xp', '_level');
+    const levelEntity = this._hass.states[levelEntityId];
+    const currentLevel = levelEntity ? parseInt(levelEntity.state) || 1 : 1;
+    
+    const unlocksEntityId = selectedSkill.replace('number.', 'sensor.').replace('_xp', '_unlocks');
+    const unlocksEntity = this._hass.states[unlocksEntityId];
+    
+    let skillName = xpEntity.attributes && xpEntity.attributes.friendly_name ? xpEntity.attributes.friendly_name : 'Unknown Skill';
+    if (skillName.endsWith(' XP')) {
+      skillName = skillName.slice(0, -3);
+    }
+
+    const skillIcon = xpEntity.attributes && xpEntity.attributes.icon ? xpEntity.attributes.icon : 'mdi:star';
+
+    // Parse unlocks data
+    let unlocksData = {};
+    if (unlocksEntity && unlocksEntity.attributes && unlocksEntity.attributes.unlocks) {
+      try {
+        unlocksData = JSON.parse(unlocksEntity.attributes.unlocks);
+      } catch (e) {
+        console.error('Failed to parse unlocks data:', e);
+      }
+    }
+
+    // Use Home Assistant's dialog system
+    this._openDialog(skillName, skillIcon, currentLevel, unlocksData);
+  }
+
+  _openDialog(skillName, skillIcon, currentLevel, unlocksData) {
+    // Use Home Assistant's dialog system properly
+    const dialogConfig = {
+      title: `${skillName} Unlocks`,
+      content: this._createDialogContent(skillName, skillIcon, currentLevel, unlocksData),
+      wide: true,
+      hideActions: true
+    };
+
+    // Fire show-dialog event that HA's dialog manager will handle
+    const event = new CustomEvent('show-dialog', {
+      detail: {
+        dialogTag: 'ha-dialog',
+        dialogImport: () => import('../../../../../../src/dialogs/ha-dialog'),
+        dialogParams: dialogConfig
+      },
+      bubbles: true,
+      composed: true
+    });
+
+    this.dispatchEvent(event);
+    
+    // Fallback: Create our own dialog if HA's system isn't available
+    if (!event.defaultPrevented) {
+      this._createFallbackDialog(skillName, skillIcon, currentLevel, unlocksData);
+    }
+  }
+
+  _createFallbackDialog(skillName, skillIcon, currentLevel, unlocksData) {
+    // Create a modal overlay as fallback
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    `;
+    
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+      background: var(--card-background-color);
+      border-radius: var(--ha-card-border-radius, 12px);
+      box-shadow: var(--ha-dialog-box-shadow, 0 8px 32px rgba(0, 0, 0, 0.3));
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow: hidden;
+      position: relative;
+    `;
+    
+    // Add close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--secondary-text-color);
+      z-index: 1;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    
+    closeBtn.addEventListener('click', () => {
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    });
+    
+    dialog.innerHTML = this._createDialogContent(skillName, skillIcon, currentLevel, unlocksData);
+    dialog.appendChild(closeBtn);
+    overlay.appendChild(dialog);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    });
+    
+    // Close on escape key
+    const escapeHandler = (e) => {
+      if (e.key === 'Escape') {
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+        document.removeEventListener('keydown', escapeHandler);
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    
+    document.body.appendChild(overlay);
+  }
+
+  _createDialogContent(skillName, skillIcon, currentLevel, unlocksData) {
+    const levels = Object.keys(unlocksData).map(l => parseInt(l)).sort((a, b) => a - b);
+    
+    let unlocksHtml = '';
+    if (levels.length === 0) {
+      unlocksHtml = '<div class="no-unlocks">No unlocks defined for this skill yet.</div>';
+    } else {
+      for (const level of levels) {
+        const unlocks = unlocksData[level.toString()] || [];
+        const isUnlocked = level <= currentLevel;
+        
+        unlocksHtml += `
+          <div class="level-section">
+            <div class="level-header">
+              <div class="level-number">Lv${level}</div>
+              <span>${isUnlocked ? 'Unlocked' : 'Locked'} (${unlocks.length} item${unlocks.length !== 1 ? 's' : ''})</span>
+            </div>
+            <div class="unlocks-grid">
+              ${unlocks.map(unlock => this._createUnlockCard(level, unlock, isUnlocked)).join('')}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    return `
+      <style>
+        .ha-dialog-content {
+          padding: 0;
+        }
+        
+        .dialog-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 24px 24px 16px 24px;
+          border-bottom: 1px solid var(--divider-color);
+        }
+
+        .dialog-title {
+          font-size: 22px;
+          font-weight: 400;
+          color: var(--primary-text-color);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .dialog-title ha-icon {
+          --mdc-icon-size: 24px;
+          color: var(--primary-color);
+        }
+
+        .unlocks-container {
+          padding: 16px 24px 24px 24px;
+          max-height: calc(80vh - 120px);
+          overflow-y: auto;
+        }
+
+        .level-section {
+          margin-bottom: 24px;
+        }
+
+        .level-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 12px;
+          padding: 12px 16px;
+          background: var(--primary-color);
+          color: var(--text-primary-color);
+          border-radius: var(--ha-card-border-radius, 12px);
+          font-weight: 500;
+        }
+
+        .level-number {
+          background: rgba(255, 255, 255, 0.2);
+          padding: 6px 12px;
+          border-radius: var(--ha-card-border-radius, 8px);
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .unlocks-grid {
+          display: grid;
+          gap: 12px;
+        }
+
+        .unlock-card {
+          display: flex;
+          align-items: flex-start;
+          padding: 16px;
+          background: var(--card-background-color);
+          border: 1px solid var(--divider-color);
+          border-radius: var(--ha-card-border-radius, 12px);
+          transition: all 0.2s ease;
+          box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.12));
+        }
+
+        .unlock-card:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--ha-card-box-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
+        }
+
+        .unlock-card.locked {
+          opacity: 0.6;
+          background: var(--disabled-color);
+        }
+
+        .unlock-level {
+          background: var(--primary-color);
+          color: var(--text-primary-color);
+          padding: 8px 12px;
+          border-radius: var(--ha-card-border-radius, 8px);
+          font-weight: 600;
+          font-size: 14px;
+          min-width: 48px;
+          text-align: center;
+          margin-right: 16px;
+          flex-shrink: 0;
+        }
+
+        .unlock-content {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .unlock-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+          flex-wrap: wrap;
+        }
+
+        .unlock-name {
+          font-weight: 500;
+          color: var(--primary-text-color);
+          font-size: 16px;
+          line-height: 1.3;
+        }
+
+        .unlock-category {
+          background: var(--accent-color);
+          color: var(--text-accent-color, white);
+          padding: 4px 8px;
+          border-radius: var(--ha-card-border-radius, 16px);
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .unlock-xp {
+          background: var(--warning-color);
+          color: var(--text-primary-color);
+          padding: 4px 8px;
+          border-radius: var(--ha-card-border-radius, 16px);
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .unlock-description {
+          color: var(--secondary-text-color);
+          font-size: 14px;
+          line-height: 1.5;
+          margin-bottom: 8px;
+        }
+
+        .unlock-extras {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .unlock-tag {
+          background: var(--secondary-background-color);
+          color: var(--secondary-text-color);
+          padding: 3px 8px;
+          border-radius: var(--ha-card-border-radius, 12px);
+          font-size: 11px;
+          border: 1px solid var(--divider-color);
+        }
+
+        .no-unlocks {
+          text-align: center;
+          color: var(--secondary-text-color);
+          font-style: italic;
+          padding: 40px 20px;
+          background: var(--card-background-color);
+          border-radius: var(--ha-card-border-radius, 12px);
+        }
+
+        @media (max-width: 768px) {
+          .dialog-header {
+            padding: 16px 16px 12px 16px;
+          }
+          
+          .unlocks-container {
+            padding: 12px 16px 16px 16px;
+          }
+          
+          .unlock-card {
+            padding: 12px;
+          }
+          
+          .unlock-level {
+            padding: 6px 8px;
+            min-width: 40px;
+            margin-right: 12px;
+          }
+          
+          .unlock-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+          }
+        }
+      </style>
+      <div class="dialog-header">
+        <div class="dialog-title">
+          <ha-icon icon="${skillIcon}"></ha-icon>
+          ${skillName} Unlocks
+        </div>
+      </div>
+      <div class="unlocks-container">
+        ${unlocksHtml}
+      </div>
+    `;
+  }
+
+  _createUnlockCard(level, unlock, isUnlocked) {
+    const statusClass = isUnlocked ? 'unlocked' : 'locked';
+    const name = unlock.name || 'Unknown';
+    const category = unlock.category || 'General';
+    const xpReward = unlock.xp_reward || unlock.xp || 0;
+    const description = unlock.description || '';
+    
+    // Create extra info tags
+    let extraTags = '';
+    
+    // Add muscle groups if present
+    if (unlock.muscle_groups && Array.isArray(unlock.muscle_groups)) {
+      extraTags += unlock.muscle_groups.map(group => `<span class="unlock-tag">${group}</span>`).join('');
+    }
+    
+    // Add equipment if present
+    if (unlock.equipment) {
+      extraTags += `<span class="unlock-tag">Requires: ${unlock.equipment}</span>`;
+    }
+    
+    // Add additional requirements if present
+    if (unlock.additional_reqs) {
+      const reqs = Object.entries(unlock.additional_reqs).map(([skill, level]) => `${skill} ${level}`);
+      extraTags += `<span class="unlock-tag">Needs: ${reqs.join(', ')}</span>`;
+    }
+
+    // Add equipment stats if present
+    if (unlock.type) {
+      extraTags += `<span class="unlock-tag">Type: ${unlock.type}</span>`;
+    }
+    if (unlock.cost !== undefined) {
+      extraTags += `<span class="unlock-tag">Cost: ${unlock.cost}</span>`;
+    }
+    if (unlock.durability !== undefined) {
+      extraTags += `<span class="unlock-tag">Durability: ${unlock.durability}</span>`;
+    }
+    if (unlock.damage !== undefined) {
+      extraTags += `<span class="unlock-tag">Damage: ${unlock.damage}</span>`;
+    }
+    if (unlock.armor !== undefined) {
+      extraTags += `<span class="unlock-tag">Armor: ${unlock.armor}</span>`;
+    }
+    if (unlock.magic_damage !== undefined) {
+      extraTags += `<span class="unlock-tag">Magic: ${unlock.magic_damage}</span>`;
+    }
+    if (unlock.blocks !== undefined) {
+      extraTags += `<span class="unlock-tag">Blocks: ${unlock.blocks}</span>`;
+    }
+    if (unlock.magic_armor !== undefined) {
+      extraTags += `<span class="unlock-tag">Magic Armor: ${unlock.magic_armor}</span>`;
+    }
+    
+    // Add any other custom fields
+    const standardFields = ['name', 'category', 'xp', 'xp_reward', 'description', 'muscle_groups', 'equipment', 'additional_reqs', 'type', 'cost', 'durability', 'damage', 'armor', 'magic_damage', 'blocks', 'magic_armor'];
+    Object.entries(unlock).forEach(([key, value]) => {
+      if (!standardFields.includes(key) && value !== null && value !== undefined) {
+        if (typeof value === 'object') {
+          extraTags += `<span class="unlock-tag">${key}: ${JSON.stringify(value)}</span>`;
+        } else {
+          extraTags += `<span class="unlock-tag">${key}: ${value}</span>`;
+        }
+      }
+    });
+
+    return `
+      <div class="unlock-card ${statusClass}">
+        <div class="unlock-level">Lv${level}</div>
+        <div class="unlock-content">
+          <div class="unlock-header">
+            <div class="unlock-name">${name}</div>
+            <span class="unlock-category">${category}</span>
+            ${xpReward > 0 ? `<span class="unlock-xp">${xpReward} XP</span>` : ''}
+          </div>
+          ${description ? `<div class="unlock-description">${description}</div>` : ''}
+          ${extraTags ? `<div class="unlock-extras">${extraTags}</div>` : ''}
+        </div>
+      </div>
+    `;
   }
 
   // This method is required for the visual editor to work
