@@ -98,6 +98,28 @@ class LifeSkillsCard extends HTMLElement {
       <style>
         :host {
           display: block;
+          /* Inherit all CSS custom properties from parent */
+          --primary-color: var(--primary-color);
+          --accent-color: var(--accent-color);
+          --primary-text-color: var(--primary-text-color);
+          --secondary-text-color: var(--secondary-text-color);
+          --text-primary-color: var(--text-primary-color);
+          --text-accent-color: var(--text-accent-color);
+          --card-background-color: var(--card-background-color);
+          --secondary-background-color: var(--secondary-background-color);
+          --divider-color: var(--divider-color);
+          --disabled-color: var(--disabled-color);
+          --warning-color: var(--warning-color);
+          --error-color: var(--error-color);
+          --success-color: var(--success-color);
+          --info-color: var(--info-color);
+          --ha-card-border-radius: var(--ha-card-border-radius);
+          --ha-card-box-shadow: var(--ha-card-box-shadow);
+          --ha-dialog-box-shadow: var(--ha-dialog-box-shadow);
+          --mdc-theme-primary: var(--mdc-theme-primary);
+          --mdc-theme-on-primary: var(--mdc-theme-on-primary);
+          --mdc-theme-surface: var(--mdc-theme-surface);
+          --mdc-theme-on-surface: var(--mdc-theme-on-surface);
         }
         
         ha-card {
@@ -352,6 +374,43 @@ class LifeSkillsCard extends HTMLElement {
     
     dialog.innerHTML = this._createDialogContent(skillName, skillIcon, currentLevel, unlocksData);
     dialog.appendChild(closeBtn);
+    
+    // Add filter chip functionality
+    const filterChips = dialog.querySelectorAll('.filter-chip');
+    const unlockCards = dialog.querySelectorAll('.unlock-card');
+    const levelSections = dialog.querySelectorAll('.level-section');
+    
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        // Remove active class from all chips
+        filterChips.forEach(c => c.classList.remove('active'));
+        // Add active class to clicked chip
+        chip.classList.add('active');
+        
+        const selectedCategory = chip.getAttribute('data-category');
+        
+        // Show/hide unlock cards based on category
+        unlockCards.forEach(card => {
+          const cardCategory = card.getAttribute('data-category');
+          if (selectedCategory === 'all' || cardCategory === selectedCategory) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        
+        // Show/hide level sections if they have visible cards
+        levelSections.forEach(section => {
+          const visibleCards = section.querySelectorAll('.unlock-card:not([style*="display: none"])');
+          if (visibleCards.length > 0) {
+            section.style.display = 'block';
+          } else {
+            section.style.display = 'none';
+          }
+        });
+      });
+    });
+    
     overlay.appendChild(dialog);
     
     // Close on overlay click
@@ -378,6 +437,27 @@ class LifeSkillsCard extends HTMLElement {
   _createDialogContent(skillName, skillIcon, currentLevel, unlocksData) {
     const levels = Object.keys(unlocksData).map(l => parseInt(l)).sort((a, b) => a - b);
     
+    // Get all unique categories for filter chips
+    const allCategories = new Set();
+    levels.forEach(level => {
+      const unlocks = unlocksData[level.toString()] || [];
+      unlocks.forEach(unlock => {
+        const category = unlock.category || 'General';
+        allCategories.add(category);
+      });
+    });
+    const categories = Array.from(allCategories).sort();
+    
+    // Create filter chips
+    const filterChipsHtml = `
+      <div class="filter-chips">
+        <button class="filter-chip active" data-category="all">All</button>
+        ${categories.map(category => 
+          `<button class="filter-chip" data-category="${category}">${category}</button>`
+        ).join('')}
+      </div>
+    `;
+    
     let unlocksHtml = '';
     if (levels.length === 0) {
       unlocksHtml = '<div class="no-unlocks">No unlocks defined for this skill yet.</div>';
@@ -389,7 +469,7 @@ class LifeSkillsCard extends HTMLElement {
         unlocksHtml += `
           <div class="level-section">
             <div class="level-header">
-              <div class="level-number">Lv${level}</div>
+              <div class="level-number ${isUnlocked ? 'unlocked' : 'locked'}">${level}</div>
               <span>${isUnlocked ? 'Unlocked' : 'Locked'} (${unlocks.length} item${unlocks.length !== 1 ? 's' : ''})</span>
             </div>
             <div class="unlocks-grid">
@@ -402,6 +482,25 @@ class LifeSkillsCard extends HTMLElement {
 
     return `
       <style>
+        :root {
+          --primary-color: #03a9f4;
+          --main-background-color: linear-gradient(120deg, rgba(255,220,178,0.2) 0%, rgba(255,176,233,0) 70%);
+          --accent-color:  rgb(255,210,128);
+          --accent-background-color: linear-gradient(145deg, rgba(254,179,229,0.5) 0%, rgba(245,205,198,0) 100%);
+          --primary-text-color: #ffffff;
+          --secondary-text-color: #b3b3b3;
+          --text-primary-color: #ffffff;
+          --text-accent-color: #b3b3b3;
+          --card-background-color: #1e1e1e;
+          --secondary-background-color: #2c2c2c;
+          --divider-color: #3c3c3c;
+          --disabled-color: #6c6c6c;
+          --warning-color: rgb(255,210,128);
+          --error-color: #f48fb1;
+          --success-color: #81c784;
+          --info-color: #64b5f6;
+        }
+
         .ha-dialog-content {
           padding: 0;
         }
@@ -428,9 +527,42 @@ class LifeSkillsCard extends HTMLElement {
           color: var(--primary-color);
         }
 
+        .filter-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          padding: 16px 24px;
+          border-bottom: 1px solid var(--divider-color);
+          background: var(--secondary-background-color);
+        }
+
+        .filter-chip {
+          background: var(--main-background-color);
+          border: none;
+          border-radius: 20px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--primary-text-color);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .filter-chip:hover {
+          background: var(--accent-background-color);
+          color: var(--text-primary-color);
+          border: none;
+        }
+
+        .filter-chip.active {
+          background: var(--accent-background-color);
+          color: var(--text-primary-color);
+          border: none;
+        }
+
         .unlocks-container {
           padding: 16px 24px 24px 24px;
-          max-height: calc(80vh - 120px);
+          max-height: calc(80vh - 200px);
           overflow-y: auto;
         }
 
@@ -444,18 +576,29 @@ class LifeSkillsCard extends HTMLElement {
           gap: 12px;
           margin-bottom: 12px;
           padding: 12px 16px;
-          background: var(--primary-color);
+          background: none;
           color: var(--text-primary-color);
           border-radius: var(--ha-card-border-radius, 12px);
           font-weight: 500;
         }
 
         .level-number {
-          background: rgba(255, 255, 255, 0.2);
+          background: var(--card-background-color);
           padding: 6px 12px;
           border-radius: var(--ha-card-border-radius, 8px);
           font-weight: 600;
           font-size: 14px;
+          transition: all 0.3s ease;
+        }
+
+        .level-number.unlocked {
+          background: var(--accent-background-color);
+          color: white;
+        }
+
+        .level-number.locked {
+          background: rgba(255, 255, 255, 0.1);
+          opacity: 0.7;
         }
 
         .unlocks-grid {
@@ -465,13 +608,12 @@ class LifeSkillsCard extends HTMLElement {
 
         .unlock-card {
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           padding: 16px;
-          background: var(--card-background-color);
+          background: var(--accent-background-color);
           border: 1px solid var(--divider-color);
           border-radius: var(--ha-card-border-radius, 12px);
           transition: all 0.2s ease;
-          box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.12));
         }
 
         .unlock-card:hover {
@@ -481,20 +623,27 @@ class LifeSkillsCard extends HTMLElement {
 
         .unlock-card.locked {
           opacity: 0.6;
-          background: var(--disabled-color);
+          background: var(--main-background-color);
         }
 
-        .unlock-level {
-          background: var(--primary-color);
+        .unlock-level-circle {
+          background: rgb(255, 255, 255, 0.2);
           color: var(--text-primary-color);
-          padding: 8px 12px;
-          border-radius: var(--ha-card-border-radius, 8px);
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           font-weight: 600;
           font-size: 14px;
-          min-width: 48px;
-          text-align: center;
           margin-right: 16px;
           flex-shrink: 0;
+        }
+
+        .unlock-level-circle.unlocked {
+          background: var(--warning-color);
+          color: white;
         }
 
         .unlock-content {
@@ -519,20 +668,11 @@ class LifeSkillsCard extends HTMLElement {
 
         .unlock-category {
           background: var(--accent-color);
-          color: var(--text-accent-color, white);
+          color: var(--text-primary-color, white);
           padding: 4px 8px;
           border-radius: var(--ha-card-border-radius, 16px);
           font-size: 12px;
           font-weight: 500;
-        }
-
-        .unlock-xp {
-          background: var(--warning-color);
-          color: var(--text-primary-color);
-          padding: 4px 8px;
-          border-radius: var(--ha-card-border-radius, 16px);
-          font-size: 12px;
-          font-weight: 600;
         }
 
         .unlock-description {
@@ -542,10 +682,19 @@ class LifeSkillsCard extends HTMLElement {
           margin-bottom: 8px;
         }
 
+        .unlock-bottom-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
         .unlock-extras {
           display: flex;
           flex-wrap: wrap;
           gap: 6px;
+          flex: 1;
         }
 
         .unlock-tag {
@@ -555,6 +704,16 @@ class LifeSkillsCard extends HTMLElement {
           border-radius: var(--ha-card-border-radius, 12px);
           font-size: 11px;
           border: 1px solid var(--divider-color);
+        }
+
+        .unlock-xp {
+          background: #4CAF50;
+          color: white;
+          padding: 6px 12px;
+          border-radius: var(--ha-card-border-radius, 16px);
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
         }
 
         .no-unlocks {
@@ -571,6 +730,10 @@ class LifeSkillsCard extends HTMLElement {
             padding: 16px 16px 12px 16px;
           }
           
+          .filter-chips {
+            padding: 12px 16px;
+          }
+          
           .unlocks-container {
             padding: 12px 16px 16px 16px;
           }
@@ -579,9 +742,9 @@ class LifeSkillsCard extends HTMLElement {
             padding: 12px;
           }
           
-          .unlock-level {
-            padding: 6px 8px;
-            min-width: 40px;
+          .unlock-level-circle {
+            width: 40px;
+            height: 40px;
             margin-right: 12px;
           }
           
@@ -598,6 +761,7 @@ class LifeSkillsCard extends HTMLElement {
           ${skillName} Unlocks
         </div>
       </div>
+      ${filterChipsHtml}
       <div class="unlocks-container">
         ${unlocksHtml}
       </div>
@@ -611,13 +775,8 @@ class LifeSkillsCard extends HTMLElement {
     const xpReward = unlock.xp_reward || unlock.xp || 0;
     const description = unlock.description || '';
     
-    // Create extra info tags
+    // Create extra info tags (excluding muscle groups and XP which go in bottom row)
     let extraTags = '';
-    
-    // Add muscle groups if present
-    if (unlock.muscle_groups && Array.isArray(unlock.muscle_groups)) {
-      extraTags += unlock.muscle_groups.map(group => `<span class="unlock-tag">${group}</span>`).join('');
-    }
     
     // Add equipment if present
     if (unlock.equipment) {
@@ -656,7 +815,13 @@ class LifeSkillsCard extends HTMLElement {
       extraTags += `<span class="unlock-tag">Magic Armor: ${unlock.magic_armor}</span>`;
     }
     
-    // Add any other custom fields
+    // Create muscle group tags for bottom row
+    let muscleGroupTags = '';
+    if (unlock.muscle_groups && Array.isArray(unlock.muscle_groups)) {
+      muscleGroupTags = unlock.muscle_groups.map(group => `<span class="unlock-tag">${group}</span>`).join('');
+    }
+    
+    // Add any other custom fields (excluding already handled ones)
     const standardFields = ['name', 'category', 'xp', 'xp_reward', 'description', 'muscle_groups', 'equipment', 'additional_reqs', 'type', 'cost', 'durability', 'damage', 'armor', 'magic_damage', 'blocks', 'magic_armor'];
     Object.entries(unlock).forEach(([key, value]) => {
       if (!standardFields.includes(key) && value !== null && value !== undefined) {
@@ -669,16 +834,21 @@ class LifeSkillsCard extends HTMLElement {
     });
 
     return `
-      <div class="unlock-card ${statusClass}">
-        <div class="unlock-level">Lv${level}</div>
+      <div class="unlock-card ${statusClass}" data-category="${category}">
+        <div class="unlock-level-circle">Lv${level}</div>
         <div class="unlock-content">
           <div class="unlock-header">
             <div class="unlock-name">${name}</div>
             <span class="unlock-category">${category}</span>
-            ${xpReward > 0 ? `<span class="unlock-xp">${xpReward} XP</span>` : ''}
           </div>
           ${description ? `<div class="unlock-description">${description}</div>` : ''}
-          ${extraTags ? `<div class="unlock-extras">${extraTags}</div>` : ''}
+          ${extraTags ? `<div class="unlock-extras" style="margin-bottom: 8px;">${extraTags}</div>` : ''}
+          <div class="unlock-bottom-row">
+            <div class="unlock-extras">
+              ${muscleGroupTags}
+            </div>
+            ${xpReward > 0 ? `<span class="unlock-xp">${xpReward} XP</span>` : ''}
+          </div>
         </div>
       </div>
     `;
