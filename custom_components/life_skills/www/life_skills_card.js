@@ -668,7 +668,7 @@ class LifeSkillsCard extends HTMLElement {
 
         .unlock-category {
           background: var(--accent-color);
-          color: var(--text-accent-color, white);
+          color: var(--text-primary-color, white);
           padding: 4px 8px;
           border-radius: var(--ha-card-border-radius, 16px);
           font-size: 12px;
