@@ -18,6 +18,7 @@ class LifeSkillsCard extends LitElement {
       display: block;
     }
     ha-card {
+      background: linear-gradient(120deg, rgba(255,220,178,0.2) 0%, rgba(255,176,233,0) 70%);
       padding: 0;
       overflow: hidden;
     }
