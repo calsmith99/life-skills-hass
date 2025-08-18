@@ -484,7 +484,7 @@ class LifeSkillsCard extends HTMLElement {
       <style>
         :root {
           --primary-color: #03a9f4;
-          --primary-background-color: linear-gradient(120deg, rgba(255,220,178,0.2) 0%, rgba(255,176,233,0) 70%);
+          --main-background-color: linear-gradient(120deg, rgba(255,220,178,0.2) 0%, rgba(255,176,233,0) 70%);
           --accent-color:  rgb(255,210,128);
           --accent-background-color: linear-gradient(145deg, rgba(254,179,229,0.5) 0%, rgba(245,205,198,0) 100%);
           --primary-text-color: #ffffff;
@@ -537,13 +537,13 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .filter-chip {
-          background: var(--primary-background-color);
+          background: var(--main-background-color);
           border: none;
           border-radius: 20px;
           padding: 8px 16px;
           font-size: 14px;
           font-weight: 500;
-          color: var(--secondary-text-color);
+          color: var(--primary-text-color);
           cursor: pointer;
           transition: all 0.2s ease;
         }
@@ -623,11 +623,11 @@ class LifeSkillsCard extends HTMLElement {
 
         .unlock-card.locked {
           opacity: 0.6;
-          background: var(--primary-background-color);
+          background: var(--main-background-color);
         }
 
         .unlock-level-circle {
-          background: var(--primary-background-color);
+          background: rgb(255, 255, 255, 0.2);
           color: var(--text-primary-color);
           width: 48px;
           height: 48px;
