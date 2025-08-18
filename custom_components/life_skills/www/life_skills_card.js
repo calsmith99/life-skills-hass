@@ -205,17 +205,12 @@ class LifeSkillsCard extends HTMLElement {
     // Add click event listener to the card after a micro task to ensure DOM is ready
     requestAnimationFrame(() => {
       const card = this.shadowRoot.querySelector('ha-card');
-      console.log('Setting up click handler, card found:', !!card); // Debug log
       if (card) {
         // Remove any existing listeners first
         card.removeEventListener('click', this._cardClickHandler);
         // Add the new listener
-        this._cardClickHandler = () => {
-          console.log('Card clicked!'); // Debug log
-          this._showUnlocksPopup();
-        };
+        this._cardClickHandler = () => this._showUnlocksPopup();
         card.addEventListener('click', this._cardClickHandler);
-        console.log('Click handler added'); // Debug log
       }
     });
   }
@@ -236,14 +231,9 @@ class LifeSkillsCard extends HTMLElement {
   }
 
   _showUnlocksPopup() {
-    console.log('_showUnlocksPopup called'); // Debug log
-    
     if (!this.config.skill || !this._hass.states[this.config.skill]) {
-      console.log('No skill config or entity found:', this.config.skill); // Debug log
       return;
     }
-
-    console.log('Opening popup for skill:', this.config.skill); // Debug log
 
     const selectedSkill = this.config.skill;
     const xpEntity = this._hass.states[selectedSkill];
