@@ -352,6 +352,43 @@ class LifeSkillsCard extends HTMLElement {
     
     dialog.innerHTML = this._createDialogContent(skillName, skillIcon, currentLevel, unlocksData);
     dialog.appendChild(closeBtn);
+    
+    // Add filter chip functionality
+    const filterChips = dialog.querySelectorAll('.filter-chip');
+    const unlockCards = dialog.querySelectorAll('.unlock-card');
+    const levelSections = dialog.querySelectorAll('.level-section');
+    
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        // Remove active class from all chips
+        filterChips.forEach(c => c.classList.remove('active'));
+        // Add active class to clicked chip
+        chip.classList.add('active');
+        
+        const selectedCategory = chip.getAttribute('data-category');
+        
+        // Show/hide unlock cards based on category
+        unlockCards.forEach(card => {
+          const cardCategory = card.getAttribute('data-category');
+          if (selectedCategory === 'all' || cardCategory === selectedCategory) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        
+        // Show/hide level sections if they have visible cards
+        levelSections.forEach(section => {
+          const visibleCards = section.querySelectorAll('.unlock-card:not([style*="display: none"])');
+          if (visibleCards.length > 0) {
+            section.style.display = 'block';
+          } else {
+            section.style.display = 'none';
+          }
+        });
+      });
+    });
+    
     overlay.appendChild(dialog);
     
     // Close on overlay click
@@ -377,6 +414,27 @@ class LifeSkillsCard extends HTMLElement {
 
   _createDialogContent(skillName, skillIcon, currentLevel, unlocksData) {
     const levels = Object.keys(unlocksData).map(l => parseInt(l)).sort((a, b) => a - b);
+    
+    // Get all unique categories for filter chips
+    const allCategories = new Set();
+    levels.forEach(level => {
+      const unlocks = unlocksData[level.toString()] || [];
+      unlocks.forEach(unlock => {
+        const category = unlock.category || 'General';
+        allCategories.add(category);
+      });
+    });
+    const categories = Array.from(allCategories).sort();
+    
+    // Create filter chips
+    const filterChipsHtml = `
+      <div class="filter-chips">
+        <button class="filter-chip active" data-category="all">All</button>
+        ${categories.map(category => 
+          `<button class="filter-chip" data-category="${category}">${category}</button>`
+        ).join('')}
+      </div>
+    `;
     
     let unlocksHtml = '';
     if (levels.length === 0) {
@@ -428,9 +486,42 @@ class LifeSkillsCard extends HTMLElement {
           color: var(--primary-color);
         }
 
+        .filter-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          padding: 16px 24px;
+          border-bottom: 1px solid var(--divider-color);
+          background: var(--secondary-background-color);
+        }
+
+        .filter-chip {
+          background: var(--card-background-color);
+          border: 1px solid var(--divider-color);
+          border-radius: 20px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--secondary-text-color);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .filter-chip:hover {
+          background: var(--primary-color);
+          color: var(--text-primary-color);
+          border-color: var(--primary-color);
+        }
+
+        .filter-chip.active {
+          background: var(--primary-color);
+          color: var(--text-primary-color);
+          border-color: var(--primary-color);
+        }
+
         .unlocks-container {
           padding: 16px 24px 24px 24px;
-          max-height: calc(80vh - 120px);
+          max-height: calc(80vh - 200px);
           overflow-y: auto;
         }
 
@@ -465,7 +556,7 @@ class LifeSkillsCard extends HTMLElement {
 
         .unlock-card {
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           padding: 16px;
           background: var(--card-background-color);
           border: 1px solid var(--divider-color);
@@ -484,15 +575,17 @@ class LifeSkillsCard extends HTMLElement {
           background: var(--disabled-color);
         }
 
-        .unlock-level {
+        .unlock-level-circle {
           background: var(--primary-color);
           color: var(--text-primary-color);
-          padding: 8px 12px;
-          border-radius: var(--ha-card-border-radius, 8px);
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           font-weight: 600;
           font-size: 14px;
-          min-width: 48px;
-          text-align: center;
           margin-right: 16px;
           flex-shrink: 0;
         }
@@ -526,15 +619,6 @@ class LifeSkillsCard extends HTMLElement {
           font-weight: 500;
         }
 
-        .unlock-xp {
-          background: var(--warning-color);
-          color: var(--text-primary-color);
-          padding: 4px 8px;
-          border-radius: var(--ha-card-border-radius, 16px);
-          font-size: 12px;
-          font-weight: 600;
-        }
-
         .unlock-description {
           color: var(--secondary-text-color);
           font-size: 14px;
@@ -542,10 +626,19 @@ class LifeSkillsCard extends HTMLElement {
           margin-bottom: 8px;
         }
 
+        .unlock-bottom-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
         .unlock-extras {
           display: flex;
           flex-wrap: wrap;
           gap: 6px;
+          flex: 1;
         }
 
         .unlock-tag {
@@ -555,6 +648,16 @@ class LifeSkillsCard extends HTMLElement {
           border-radius: var(--ha-card-border-radius, 12px);
           font-size: 11px;
           border: 1px solid var(--divider-color);
+        }
+
+        .unlock-xp {
+          background: #4CAF50;
+          color: white;
+          padding: 6px 12px;
+          border-radius: var(--ha-card-border-radius, 16px);
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
         }
 
         .no-unlocks {
@@ -571,6 +674,10 @@ class LifeSkillsCard extends HTMLElement {
             padding: 16px 16px 12px 16px;
           }
           
+          .filter-chips {
+            padding: 12px 16px;
+          }
+          
           .unlocks-container {
             padding: 12px 16px 16px 16px;
           }
@@ -579,9 +686,9 @@ class LifeSkillsCard extends HTMLElement {
             padding: 12px;
           }
           
-          .unlock-level {
-            padding: 6px 8px;
-            min-width: 40px;
+          .unlock-level-circle {
+            width: 40px;
+            height: 40px;
             margin-right: 12px;
           }
           
@@ -598,6 +705,7 @@ class LifeSkillsCard extends HTMLElement {
           ${skillName} Unlocks
         </div>
       </div>
+      ${filterChipsHtml}
       <div class="unlocks-container">
         ${unlocksHtml}
       </div>
@@ -611,13 +719,8 @@ class LifeSkillsCard extends HTMLElement {
     const xpReward = unlock.xp_reward || unlock.xp || 0;
     const description = unlock.description || '';
     
-    // Create extra info tags
+    // Create extra info tags (excluding muscle groups and XP which go in bottom row)
     let extraTags = '';
-    
-    // Add muscle groups if present
-    if (unlock.muscle_groups && Array.isArray(unlock.muscle_groups)) {
-      extraTags += unlock.muscle_groups.map(group => `<span class="unlock-tag">${group}</span>`).join('');
-    }
     
     // Add equipment if present
     if (unlock.equipment) {
@@ -656,7 +759,13 @@ class LifeSkillsCard extends HTMLElement {
       extraTags += `<span class="unlock-tag">Magic Armor: ${unlock.magic_armor}</span>`;
     }
     
-    // Add any other custom fields
+    // Create muscle group tags for bottom row
+    let muscleGroupTags = '';
+    if (unlock.muscle_groups && Array.isArray(unlock.muscle_groups)) {
+      muscleGroupTags = unlock.muscle_groups.map(group => `<span class="unlock-tag">${group}</span>`).join('');
+    }
+    
+    // Add any other custom fields (excluding already handled ones)
     const standardFields = ['name', 'category', 'xp', 'xp_reward', 'description', 'muscle_groups', 'equipment', 'additional_reqs', 'type', 'cost', 'durability', 'damage', 'armor', 'magic_damage', 'blocks', 'magic_armor'];
     Object.entries(unlock).forEach(([key, value]) => {
       if (!standardFields.includes(key) && value !== null && value !== undefined) {
@@ -669,16 +778,21 @@ class LifeSkillsCard extends HTMLElement {
     });
 
     return `
-      <div class="unlock-card ${statusClass}">
-        <div class="unlock-level">Lv${level}</div>
+      <div class="unlock-card ${statusClass}" data-category="${category}">
+        <div class="unlock-level-circle">Lv${level}</div>
         <div class="unlock-content">
           <div class="unlock-header">
             <div class="unlock-name">${name}</div>
             <span class="unlock-category">${category}</span>
-            ${xpReward > 0 ? `<span class="unlock-xp">${xpReward} XP</span>` : ''}
           </div>
           ${description ? `<div class="unlock-description">${description}</div>` : ''}
-          ${extraTags ? `<div class="unlock-extras">${extraTags}</div>` : ''}
+          ${extraTags ? `<div class="unlock-extras" style="margin-bottom: 8px;">${extraTags}</div>` : ''}
+          <div class="unlock-bottom-row">
+            <div class="unlock-extras">
+              ${muscleGroupTags}
+            </div>
+            ${xpReward > 0 ? `<span class="unlock-xp">${xpReward} XP</span>` : ''}
+          </div>
         </div>
       </div>
     `;
