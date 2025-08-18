@@ -98,6 +98,28 @@ class LifeSkillsCard extends HTMLElement {
       <style>
         :host {
           display: block;
+          /* Inherit all CSS custom properties from parent */
+          --primary-color: var(--primary-color);
+          --accent-color: var(--accent-color);
+          --primary-text-color: var(--primary-text-color);
+          --secondary-text-color: var(--secondary-text-color);
+          --text-primary-color: var(--text-primary-color);
+          --text-accent-color: var(--text-accent-color);
+          --card-background-color: var(--card-background-color);
+          --secondary-background-color: var(--secondary-background-color);
+          --divider-color: var(--divider-color);
+          --disabled-color: var(--disabled-color);
+          --warning-color: var(--warning-color);
+          --error-color: var(--error-color);
+          --success-color: var(--success-color);
+          --info-color: var(--info-color);
+          --ha-card-border-radius: var(--ha-card-border-radius);
+          --ha-card-box-shadow: var(--ha-card-box-shadow);
+          --ha-dialog-box-shadow: var(--ha-dialog-box-shadow);
+          --mdc-theme-primary: var(--mdc-theme-primary);
+          --mdc-theme-on-primary: var(--mdc-theme-on-primary);
+          --mdc-theme-surface: var(--mdc-theme-surface);
+          --mdc-theme-on-surface: var(--mdc-theme-on-surface);
         }
         
         ha-card {
@@ -447,7 +469,7 @@ class LifeSkillsCard extends HTMLElement {
         unlocksHtml += `
           <div class="level-section">
             <div class="level-header">
-              <div class="level-number">Lv${level}</div>
+              <div class="level-number ${isUnlocked ? 'unlocked' : 'locked'}">${level}</div>
               <span>${isUnlocked ? 'Unlocked' : 'Locked'} (${unlocks.length} item${unlocks.length !== 1 ? 's' : ''})</span>
             </div>
             <div class="unlocks-grid">
@@ -496,7 +518,7 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .filter-chip {
-          background: var(--card-background-color);
+          background: var(--primary-background-color);
           border: 1px solid var(--divider-color);
           border-radius: 20px;
           padding: 8px 16px;
@@ -508,13 +530,13 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .filter-chip:hover {
-          background: var(--primary-color);
+          background: var(--secondary-background-color);
           color: var(--text-primary-color);
           border-color: var(--primary-color);
         }
 
         .filter-chip.active {
-          background: var(--primary-color);
+          background: var(--secondary-background-color);
           color: var(--text-primary-color);
           border-color: var(--primary-color);
         }
@@ -535,7 +557,7 @@ class LifeSkillsCard extends HTMLElement {
           gap: 12px;
           margin-bottom: 12px;
           padding: 12px 16px;
-          background: var(--primary-color);
+          background: none;
           color: var(--text-primary-color);
           border-radius: var(--ha-card-border-radius, 12px);
           font-weight: 500;
@@ -547,6 +569,18 @@ class LifeSkillsCard extends HTMLElement {
           border-radius: var(--ha-card-border-radius, 8px);
           font-weight: 600;
           font-size: 14px;
+          transition: all 0.3s ease;
+        }
+
+        .level-number.unlocked {
+          background: #4CAF50;
+          color: white;
+          box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+        }
+
+        .level-number.locked {
+          background: rgba(255, 255, 255, 0.1);
+          opacity: 0.7;
         }
 
         .unlocks-grid {
