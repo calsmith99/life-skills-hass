@@ -482,6 +482,23 @@ class LifeSkillsCard extends HTMLElement {
 
     return `
       <style>
+        :root {
+          --primary-color: linear-gradient(120deg, rgba(255,220,178,0.2) 0%, rgba(255,176,233,0) 70%);
+          --accent-color: linear-gradient(145deg, rgba(254,179,229,0.5) 0%, rgba(245,205,198,0) 100%);
+          --primary-text-color: #ffffff;
+          --secondary-text-color: #b3b3b3;
+          --text-primary-color: #000000;
+          --text-accent-color: #000000;
+          --card-background-color: #1e1e1e;
+          --secondary-background-color: #2c2c2c;
+          --divider-color: #3c3c3c;
+          --disabled-color: #6c6c6c;
+          --warning-color: rgb(255,210,128);
+          --error-color: #f48fb1;
+          --success-color: #81c784;
+          --info-color: #64b5f6;
+        }
+
         .ha-dialog-content {
           padding: 0;
         }
@@ -518,8 +535,8 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .filter-chip {
-          background: var(--primary-background-color);
-          border: 1px solid var(--divider-color);
+          background: var(--primary-color);
+          border: none;
           border-radius: 20px;
           padding: 8px 16px;
           font-size: 14px;
@@ -530,15 +547,15 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .filter-chip:hover {
-          background: var(--secondary-background-color);
+          background: var(--accent-color);
           color: var(--text-primary-color);
-          border-color: var(--primary-color);
+          border: none;
         }
 
         .filter-chip.active {
-          background: var(--secondary-background-color);
+          background: var(--accent-color);
           color: var(--text-primary-color);
-          border-color: var(--primary-color);
+          border: none;
         }
 
         .unlocks-container {
@@ -564,7 +581,7 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .level-number {
-          background: rgba(255, 255, 255, 0.2);
+          background: var(--primary-color);
           padding: 6px 12px;
           border-radius: var(--ha-card-border-radius, 8px);
           font-weight: 600;
@@ -573,7 +590,7 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .level-number.unlocked {
-          background: #4CAF50;
+          background: var(--accent-color);
           color: white;
           box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
         }
@@ -592,8 +609,8 @@ class LifeSkillsCard extends HTMLElement {
           display: flex;
           align-items: center;
           padding: 16px;
-          background: var(--card-background-color);
-          border: 1px solid var(--divider-color);
+          background: var(--primary-color);
+          border: none;
           border-radius: var(--ha-card-border-radius, 12px);
           transition: all 0.2s ease;
           box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.12));
@@ -606,11 +623,11 @@ class LifeSkillsCard extends HTMLElement {
 
         .unlock-card.locked {
           opacity: 0.6;
-          background: var(--disabled-color);
+          background: var(--primary-color);
         }
 
         .unlock-level-circle {
-          background: var(--primary-color);
+          background: rgba(255,255,255,0.2);
           color: var(--text-primary-color);
           width: 48px;
           height: 48px;
@@ -622,6 +639,11 @@ class LifeSkillsCard extends HTMLElement {
           font-size: 14px;
           margin-right: 16px;
           flex-shrink: 0;
+        }
+
+        .unlock-level-circle.unlocked {
+          background: var(--warning-color);
+          color: white;
         }
 
         .unlock-content {
