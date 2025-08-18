@@ -193,5 +193,18 @@ class LifeSkillsCard extends LitElement {
     return false;
   }
 }
+// Guard against double registration in dev/hot-reload environments
+if (!customElements.get('life-skills-card')) {
+  customElements.define('life-skills-card', LifeSkillsCard);
+}
 
-customElements.define('life-skills-card', LifeSkillsCard);
+// Optional: Register with Lovelace card picker
+window.customCards = window.customCards || [];
+if (!window.customCards.find((c) => c.type === 'life-skills-card')) {
+  window.customCards.push({
+    type: 'life-skills-card',
+    name: 'Life Skills Card',
+    description: 'Shows XP progress and level for a selected Life Skill',
+    preview: false,
+  });
+}

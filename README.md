@@ -60,4 +60,23 @@ This creates an exponential progression where higher levels become increasingly 
 
 ## Lovelace Cards
 
-Use the included custom cards or standard entity cards to display your skills progress.
+Use the included custom card or standard entity cards to display your skills progress.
+
+### If you see: "Custom element doesn't exist: life-skills-card"
+
+Add the card JavaScript as a Lovelace resource (needed on some setups):
+
+- Go to Settings → Dashboards → Three dots (top-right) → Resources
+- Click "Add Resource"
+- URL: `/life_skills/life_skills_card.js`
+- Resource type: `JavaScript Module`
+- Save and refresh the page (Shift+Reload)
+
+Then add a manual card with:
+
+```
+type: custom:life-skills-card
+skill: number.programming_xp  # replace with your XP entity id
+```
+
+Note: The integration attempts to auto-register the resource, but adding it manually ensures it works across all dashboard modes.
