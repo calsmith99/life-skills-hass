@@ -195,198 +195,6 @@ class LifeSkillsCard extends HTMLElement {
         .progress-empty {
           background: linear-gradient(135deg, #a844a188 0%, #8436ab00 10%);
         }
-
-        /* Popup Styles */
-        .popup-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        }
-
-        .popup-content {
-          background: var(--card-background-color);
-          border-radius: 8px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-          max-width: 90vw;
-          max-height: 80vh;
-          overflow-y: auto;
-          position: relative;
-        }
-
-        .popup-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 16px 20px;
-          border-bottom: 1px solid var(--divider-color);
-          position: sticky;
-          top: 0;
-          background: var(--card-background-color);
-          z-index: 1;
-        }
-
-        .popup-title {
-          font-size: 20px;
-          font-weight: 600;
-          color: var(--primary-text-color);
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .close-button {
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 8px;
-          border-radius: 50%;
-          color: var(--secondary-text-color);
-          transition: background-color 0.2s;
-        }
-
-        .close-button:hover {
-          background: var(--divider-color);
-        }
-
-        .unlocks-container {
-          padding: 20px;
-        }
-
-        .level-section {
-          margin-bottom: 24px;
-        }
-
-        .level-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 12px;
-          padding: 8px 12px;
-          background: var(--primary-color);
-          color: var(--text-primary-color);
-          border-radius: 6px;
-          font-weight: 600;
-        }
-
-        .level-number {
-          background: rgba(255, 255, 255, 0.2);
-          padding: 4px 8px;
-          border-radius: 4px;
-          min-width: 32px;
-          text-align: center;
-        }
-
-        .unlocks-grid {
-          display: grid;
-          gap: 12px;
-        }
-
-        .unlock-card {
-          display: flex;
-          align-items: center;
-          padding: 12px 16px;
-          background: var(--card-background-color);
-          border: 1px solid var(--divider-color);
-          border-radius: 8px;
-          transition: all 0.2s ease;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .unlock-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .unlock-card.locked {
-          opacity: 0.6;
-          background: var(--disabled-color);
-        }
-
-        .unlock-level {
-          background: var(--primary-color);
-          color: var(--text-primary-color);
-          padding: 6px 10px;
-          border-radius: 6px;
-          font-weight: 600;
-          font-size: 14px;
-          min-width: 40px;
-          text-align: center;
-          margin-right: 16px;
-          flex-shrink: 0;
-        }
-
-        .unlock-content {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .unlock-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 4px;
-        }
-
-        .unlock-name {
-          font-weight: 600;
-          color: var(--primary-text-color);
-          font-size: 16px;
-        }
-
-        .unlock-category {
-          background: var(--accent-color);
-          color: var(--text-accent-color, white);
-          padding: 2px 8px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .unlock-xp {
-          background: linear-gradient(90deg, hsla(16, 100%, 76%, 1) 0%, hsla(49, 100%, 81%, 1) 100%);
-          color: var(--primary-text-color);
-          padding: 2px 8px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .unlock-description {
-          color: var(--secondary-text-color);
-          font-size: 14px;
-          line-height: 1.4;
-          margin-top: 4px;
-        }
-
-        .unlock-extras {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-top: 8px;
-        }
-
-        .unlock-tag {
-          background: var(--divider-color);
-          color: var(--secondary-text-color);
-          padding: 2px 6px;
-          border-radius: 8px;
-          font-size: 11px;
-        }
-
-        .no-unlocks {
-          text-align: center;
-          color: var(--secondary-text-color);
-          font-style: italic;
-          padding: 40px 20px;
-        }
       </style>
       <ha-card>
         ${skillContent}
@@ -448,35 +256,119 @@ class LifeSkillsCard extends HTMLElement {
       }
     }
 
-    // Create popup
-    const popup = document.createElement('div');
-    popup.className = 'popup-overlay';
-    popup.innerHTML = this._createPopupContent(skillName, skillIcon, currentLevel, unlocksData);
-    
-    // Add to document body
-    document.body.appendChild(popup);
-    
-    // Add event listeners
-    const closeButton = popup.querySelector('.close-button');
-    closeButton.addEventListener('click', () => this._closePopup(popup));
-    
-    popup.addEventListener('click', (e) => {
-      if (e.target === popup) {
-        this._closePopup(popup);
-      }
+    // Use Home Assistant's dialog system
+    this._openDialog(skillName, skillIcon, currentLevel, unlocksData);
+  }
+
+  _openDialog(skillName, skillIcon, currentLevel, unlocksData) {
+    // Use Home Assistant's dialog system properly
+    const dialogConfig = {
+      title: `${skillName} Unlocks`,
+      content: this._createDialogContent(skillName, skillIcon, currentLevel, unlocksData),
+      wide: true,
+      hideActions: true
+    };
+
+    // Fire show-dialog event that HA's dialog manager will handle
+    const event = new CustomEvent('show-dialog', {
+      detail: {
+        dialogTag: 'ha-dialog',
+        dialogImport: () => import('../../../../../../src/dialogs/ha-dialog'),
+        dialogParams: dialogConfig
+      },
+      bubbles: true,
+      composed: true
     });
 
-    // Add escape key listener
+    this.dispatchEvent(event);
+    
+    // Fallback: Create our own dialog if HA's system isn't available
+    if (!event.defaultPrevented) {
+      this._createFallbackDialog(skillName, skillIcon, currentLevel, unlocksData);
+    }
+  }
+
+  _createFallbackDialog(skillName, skillIcon, currentLevel, unlocksData) {
+    // Create a modal overlay as fallback
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    `;
+    
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+      background: var(--card-background-color);
+      border-radius: var(--ha-card-border-radius, 12px);
+      box-shadow: var(--ha-dialog-box-shadow, 0 8px 32px rgba(0, 0, 0, 0.3));
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow: hidden;
+      position: relative;
+    `;
+    
+    // Add close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--secondary-text-color);
+      z-index: 1;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    
+    closeBtn.addEventListener('click', () => {
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    });
+    
+    dialog.innerHTML = this._createDialogContent(skillName, skillIcon, currentLevel, unlocksData);
+    dialog.appendChild(closeBtn);
+    overlay.appendChild(dialog);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    });
+    
+    // Close on escape key
     const escapeHandler = (e) => {
       if (e.key === 'Escape') {
-        this._closePopup(popup);
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
         document.removeEventListener('keydown', escapeHandler);
       }
     };
     document.addEventListener('keydown', escapeHandler);
+    
+    document.body.appendChild(overlay);
   }
 
-  _createPopupContent(skillName, skillIcon, currentLevel, unlocksData) {
+  _createDialogContent(skillName, skillIcon, currentLevel, unlocksData) {
     const levels = Object.keys(unlocksData).map(l => parseInt(l)).sort((a, b) => a - b);
     
     let unlocksHtml = '';
@@ -502,27 +394,214 @@ class LifeSkillsCard extends HTMLElement {
     }
 
     return `
-      <div class="popup-content">
-        <div class="popup-header">
-          <div class="popup-title">
-            <ha-icon icon="${skillIcon}"></ha-icon>
-            ${skillName} Unlocks
-          </div>
-          <button class="close-button">
-            <ha-icon icon="mdi:close"></ha-icon>
-          </button>
+      <style>
+        .ha-dialog-content {
+          padding: 0;
+        }
+        
+        .dialog-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 24px 24px 16px 24px;
+          border-bottom: 1px solid var(--divider-color);
+        }
+
+        .dialog-title {
+          font-size: 22px;
+          font-weight: 400;
+          color: var(--primary-text-color);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .dialog-title ha-icon {
+          --mdc-icon-size: 24px;
+          color: var(--primary-color);
+        }
+
+        .unlocks-container {
+          padding: 16px 24px 24px 24px;
+          max-height: calc(80vh - 120px);
+          overflow-y: auto;
+        }
+
+        .level-section {
+          margin-bottom: 24px;
+        }
+
+        .level-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 12px;
+          padding: 12px 16px;
+          background: var(--primary-color);
+          color: var(--text-primary-color);
+          border-radius: var(--ha-card-border-radius, 12px);
+          font-weight: 500;
+        }
+
+        .level-number {
+          background: rgba(255, 255, 255, 0.2);
+          padding: 6px 12px;
+          border-radius: var(--ha-card-border-radius, 8px);
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .unlocks-grid {
+          display: grid;
+          gap: 12px;
+        }
+
+        .unlock-card {
+          display: flex;
+          align-items: flex-start;
+          padding: 16px;
+          background: var(--card-background-color);
+          border: 1px solid var(--divider-color);
+          border-radius: var(--ha-card-border-radius, 12px);
+          transition: all 0.2s ease;
+          box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.12));
+        }
+
+        .unlock-card:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--ha-card-box-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
+        }
+
+        .unlock-card.locked {
+          opacity: 0.6;
+          background: var(--disabled-color);
+        }
+
+        .unlock-level {
+          background: var(--primary-color);
+          color: var(--text-primary-color);
+          padding: 8px 12px;
+          border-radius: var(--ha-card-border-radius, 8px);
+          font-weight: 600;
+          font-size: 14px;
+          min-width: 48px;
+          text-align: center;
+          margin-right: 16px;
+          flex-shrink: 0;
+        }
+
+        .unlock-content {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .unlock-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+          flex-wrap: wrap;
+        }
+
+        .unlock-name {
+          font-weight: 500;
+          color: var(--primary-text-color);
+          font-size: 16px;
+          line-height: 1.3;
+        }
+
+        .unlock-category {
+          background: var(--accent-color);
+          color: var(--text-accent-color, white);
+          padding: 4px 8px;
+          border-radius: var(--ha-card-border-radius, 16px);
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .unlock-xp {
+          background: var(--warning-color);
+          color: var(--text-primary-color);
+          padding: 4px 8px;
+          border-radius: var(--ha-card-border-radius, 16px);
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .unlock-description {
+          color: var(--secondary-text-color);
+          font-size: 14px;
+          line-height: 1.5;
+          margin-bottom: 8px;
+        }
+
+        .unlock-extras {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .unlock-tag {
+          background: var(--secondary-background-color);
+          color: var(--secondary-text-color);
+          padding: 3px 8px;
+          border-radius: var(--ha-card-border-radius, 12px);
+          font-size: 11px;
+          border: 1px solid var(--divider-color);
+        }
+
+        .no-unlocks {
+          text-align: center;
+          color: var(--secondary-text-color);
+          font-style: italic;
+          padding: 40px 20px;
+          background: var(--card-background-color);
+          border-radius: var(--ha-card-border-radius, 12px);
+        }
+
+        @media (max-width: 768px) {
+          .dialog-header {
+            padding: 16px 16px 12px 16px;
+          }
+          
+          .unlocks-container {
+            padding: 12px 16px 16px 16px;
+          }
+          
+          .unlock-card {
+            padding: 12px;
+          }
+          
+          .unlock-level {
+            padding: 6px 8px;
+            min-width: 40px;
+            margin-right: 12px;
+          }
+          
+          .unlock-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+          }
+        }
+      </style>
+      <div class="dialog-header">
+        <div class="dialog-title">
+          <ha-icon icon="${skillIcon}"></ha-icon>
+          ${skillName} Unlocks
         </div>
-        <div class="unlocks-container">
-          ${unlocksHtml}
-        </div>
+      </div>
+      <div class="unlocks-container">
+        ${unlocksHtml}
       </div>
     `;
   }
 
   _createUnlockCard(level, unlock, isUnlocked) {
+    const statusClass = isUnlocked ? 'unlocked' : 'locked';
     const name = unlock.name || 'Unknown';
     const category = unlock.category || 'General';
-    const xp = unlock.xp || 0;
+    const xpReward = unlock.xp_reward || unlock.xp || 0;
     const description = unlock.description || '';
     
     // Create extra info tags
@@ -543,9 +622,35 @@ class LifeSkillsCard extends HTMLElement {
       const reqs = Object.entries(unlock.additional_reqs).map(([skill, level]) => `${skill} ${level}`);
       extraTags += `<span class="unlock-tag">Needs: ${reqs.join(', ')}</span>`;
     }
+
+    // Add equipment stats if present
+    if (unlock.type) {
+      extraTags += `<span class="unlock-tag">Type: ${unlock.type}</span>`;
+    }
+    if (unlock.cost !== undefined) {
+      extraTags += `<span class="unlock-tag">Cost: ${unlock.cost}</span>`;
+    }
+    if (unlock.durability !== undefined) {
+      extraTags += `<span class="unlock-tag">Durability: ${unlock.durability}</span>`;
+    }
+    if (unlock.damage !== undefined) {
+      extraTags += `<span class="unlock-tag">Damage: ${unlock.damage}</span>`;
+    }
+    if (unlock.armor !== undefined) {
+      extraTags += `<span class="unlock-tag">Armor: ${unlock.armor}</span>`;
+    }
+    if (unlock.magic_damage !== undefined) {
+      extraTags += `<span class="unlock-tag">Magic: ${unlock.magic_damage}</span>`;
+    }
+    if (unlock.blocks !== undefined) {
+      extraTags += `<span class="unlock-tag">Blocks: ${unlock.blocks}</span>`;
+    }
+    if (unlock.magic_armor !== undefined) {
+      extraTags += `<span class="unlock-tag">Magic Armor: ${unlock.magic_armor}</span>`;
+    }
     
     // Add any other custom fields
-    const standardFields = ['name', 'category', 'xp', 'description', 'muscle_groups', 'equipment', 'additional_reqs'];
+    const standardFields = ['name', 'category', 'xp', 'xp_reward', 'description', 'muscle_groups', 'equipment', 'additional_reqs', 'type', 'cost', 'durability', 'damage', 'armor', 'magic_damage', 'blocks', 'magic_armor'];
     Object.entries(unlock).forEach(([key, value]) => {
       if (!standardFields.includes(key) && value !== null && value !== undefined) {
         if (typeof value === 'object') {
@@ -557,25 +662,19 @@ class LifeSkillsCard extends HTMLElement {
     });
 
     return `
-      <div class="unlock-card ${isUnlocked ? '' : 'locked'}">
+      <div class="unlock-card ${statusClass}">
         <div class="unlock-level">Lv${level}</div>
         <div class="unlock-content">
           <div class="unlock-header">
             <div class="unlock-name">${name}</div>
-            <div class="unlock-category">${category}</div>
-            <div class="unlock-xp">${xp} XP</div>
+            <span class="unlock-category">${category}</span>
+            ${xpReward > 0 ? `<span class="unlock-xp">${xpReward} XP</span>` : ''}
           </div>
           ${description ? `<div class="unlock-description">${description}</div>` : ''}
           ${extraTags ? `<div class="unlock-extras">${extraTags}</div>` : ''}
         </div>
       </div>
     `;
-  }
-
-  _closePopup(popup) {
-    if (popup && popup.parentNode) {
-      popup.parentNode.removeChild(popup);
-    }
   }
 
   // This method is required for the visual editor to work
