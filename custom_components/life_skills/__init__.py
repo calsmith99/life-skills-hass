@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-# Load the card as a regular JavaScript file 
 from homeassistant.components.frontend import add_extra_js_url
 
 from .services import async_setup_services, async_unload_services
@@ -58,11 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pass
     
     # Add the card script to frontend
-    try:
-        add_extra_js_url(hass, js_url)
-        _LOGGER.debug("Life Skills: Registered frontend resource %s", js_url)
-    except Exception as e:
-        _LOGGER.warning("Life Skills: Could not register frontend resource %s: %s", js_url, e)
+    add_extra_js_url(hass, js_url)
 
     # Set up services
     await async_setup_services(hass)
