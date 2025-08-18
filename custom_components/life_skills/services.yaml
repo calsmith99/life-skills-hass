@@ -37,3 +37,127 @@ set_level:
           min: 1
           max: 100
           step: 1
+
+add_unlock:
+  name: Add Unlock
+  description: Add an unlock to a skill at a specific level
+  fields:
+    skill_name:
+      name: Skill Name
+      description: The name of the skill to add unlock to
+      required: true
+      selector:
+        text:
+    level:
+      name: Level
+      description: Level at which this unlock becomes available
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+    unlock_name:
+      name: Unlock Name
+      description: Name of the unlock
+      required: true
+      selector:
+        text:
+    category:
+      name: Category
+      description: Category of the unlock (e.g., Stretch, Yoga, Workout, Equipment)
+      required: true
+      selector:
+        text:
+    xp:
+      name: XP Value
+      description: Experience points awarded for this unlock
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1000
+          step: 1
+    description:
+      name: Description
+      description: Description of the unlock
+      required: true
+      selector:
+        text:
+          multiline: true
+    custom_fields:
+      name: Custom Fields
+      description: Additional custom fields as a JSON object (optional)
+      required: false
+      selector:
+        object:
+
+remove_unlock:
+  name: Remove Unlock
+  description: Remove an unlock from a skill at a specific level
+  fields:
+    skill_name:
+      name: Skill Name
+      description: The name of the skill to remove unlock from
+      required: true
+      selector:
+        text:
+    level:
+      name: Level
+      description: Level from which to remove the unlock
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+    unlock_name:
+      name: Unlock Name
+      description: Name of the unlock to remove
+      required: true
+      selector:
+        text:
+
+clear_unlocks_for_level:
+  name: Clear Unlocks for Level
+  description: Clear all unlocks for a skill at a specific level
+  fields:
+    skill_name:
+      name: Skill Name
+      description: The name of the skill to clear unlocks for
+      required: true
+      selector:
+        text:
+    level:
+      name: Level
+      description: Level for which to clear all unlocks
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+
+import_unlocks:
+  name: Import Unlocks
+  description: Import bulk unlocks data for a skill from a structured dictionary
+  fields:
+    skill_name:
+      name: Skill Name
+      description: The name of the skill to import unlocks for
+      required: true
+      selector:
+        text:
+    unlocks_data:
+      name: Unlocks Data
+      description: Dictionary of unlocks organized by level (e.g., {"1": [{"name": "...", "category": "...", "xp": 10, "description": "..."}]})
+      required: true
+      selector:
+        object:
+    clear_existing:
+      name: Clear Existing
+      description: Whether to clear existing unlocks before importing
+      required: false
+      default: false
+      selector:
+        boolean:
