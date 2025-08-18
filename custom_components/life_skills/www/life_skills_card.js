@@ -485,12 +485,12 @@ class LifeSkillsCard extends HTMLElement {
         :root {
           --primary-color: #03a9f4;
           --primary-background-color: linear-gradient(120deg, rgba(255,220,178,0.2) 0%, rgba(255,176,233,0) 70%);
-          --accent-color: #ff9800;
+          --accent-color:  rgb(255,210,128);
           --accent-background-color: linear-gradient(145deg, rgba(254,179,229,0.5) 0%, rgba(245,205,198,0) 100%);
           --primary-text-color: #ffffff;
           --secondary-text-color: #b3b3b3;
-          --text-primary-color: #000000;
-          --text-accent-color: #000000;
+          --text-primary-color: #ffffff;
+          --text-accent-color: #b3b3b3;
           --card-background-color: #1e1e1e;
           --secondary-background-color: #2c2c2c;
           --divider-color: #3c3c3c;
@@ -537,7 +537,7 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .filter-chip {
-          background: var(--card-background-color);
+          background: var(--primary-background-color);
           border: none;
           border-radius: 20px;
           padding: 8px 16px;
@@ -594,7 +594,6 @@ class LifeSkillsCard extends HTMLElement {
         .level-number.unlocked {
           background: var(--accent-background-color);
           color: white;
-          box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
         }
 
         .level-number.locked {
@@ -611,11 +610,10 @@ class LifeSkillsCard extends HTMLElement {
           display: flex;
           align-items: center;
           padding: 16px;
-          background: var(--card-background-color);
+          background: var(--accent-background-color);
           border: 1px solid var(--divider-color);
           border-radius: var(--ha-card-border-radius, 12px);
           transition: all 0.2s ease;
-          box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.12));
         }
 
         .unlock-card:hover {
@@ -625,7 +623,7 @@ class LifeSkillsCard extends HTMLElement {
 
         .unlock-card.locked {
           opacity: 0.6;
-          background: var(--disabled-color);
+          background: var(--primary-background-color);
         }
 
         .unlock-level-circle {
@@ -669,7 +667,7 @@ class LifeSkillsCard extends HTMLElement {
         }
 
         .unlock-category {
-          background: var(--accent-background-color);
+          background: var(--accent-color);
           color: var(--text-accent-color, white);
           padding: 4px 8px;
           border-radius: var(--ha-card-border-radius, 16px);
