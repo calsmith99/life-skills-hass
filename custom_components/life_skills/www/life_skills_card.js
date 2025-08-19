@@ -464,16 +464,16 @@ class LifeSkillsCard extends HTMLElement {
     } else {
       for (const level of levels) {
         const unlocks = unlocksData[level.toString()] || [];
-        const isUnlocked = level <= currentLevel;
+        const levelReached = level <= currentLevel;
         
         unlocksHtml += `
           <div class="level-section">
             <div class="level-header">
-              <div class="level-number ${isUnlocked ? 'unlocked' : 'locked'}">${level}</div>
-              <span>${isUnlocked ? 'Unlocked' : 'Locked'} (${unlocks.length} item${unlocks.length !== 1 ? 's' : ''})</span>
+              <div class="level-number ${levelReached ? 'unlocked' : 'locked'}">Level ${level}</div>
+              <span>${levelReached ? 'Unlocked' : 'Locked'} (${unlocks.length} item${unlocks.length !== 1 ? 's' : ''})</span>
             </div>
             <div class="unlocks-grid">
-              ${unlocks.map(unlock => this._createUnlockCard(level, unlock, isUnlocked)).join('')}
+              ${unlocks.map(unlock => this._createUnlockCard(level, unlock, levelReached && this._additionalRequirementsMet(unlock.additional_reqs))).join('')}
             </div>
           </div>
         `;
@@ -835,7 +835,7 @@ class LifeSkillsCard extends HTMLElement {
 
     return `
       <div class="unlock-card ${statusClass}" data-category="${category}">
-        <div class="unlock-level-circle">Lv${level}</div>
+        <div class="unlock-level-circle">${level}</div>
         <div class="unlock-content">
           <div class="unlock-header">
             <div class="unlock-name">${name}</div>
@@ -852,6 +852,33 @@ class LifeSkillsCard extends HTMLElement {
         </div>
       </div>
     `;
+  }
+
+  // Check if additional skill level requirements are met (e.g., { Agility: 20 })
+  _additionalRequirementsMet(additionalReqs) {
+    if (!additionalReqs || typeof additionalReqs !== 'object') {
+      return true;
+    }
+    try {
+      return Object.entries(additionalReqs).every(([skillName, reqLevel]) => {
+        const otherLevel = this._getSkillLevelByName(skillName);
+        const required = parseInt(reqLevel) || 0;
+        return otherLevel >= required;
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Resolve a skill's level sensor (sensor.<skill>_level) by display name
+  _getSkillLevelByName(skillName) {
+    if (!this._hass || !skillName) {
+      return 0;
+    }
+    const safe = String(skillName).toLowerCase().replace(/\s+/g, '_');
+    const entityId = `sensor.${safe}_level`;
+    const entity = this._hass.states[entityId];
+    return entity ? (parseInt(entity.state) || 0) : 0;
   }
 
   // This method is required for the visual editor to work
